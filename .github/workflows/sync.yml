@@ -68,7 +68,7 @@ jobs:
         if: steps.compare.outputs.up_to_date == 'false'
         uses: laytan/setup-odin@v2
         with:
-          release: stable
+          release: latest
 
       - name: Generate bindings
         if: steps.compare.outputs.up_to_date == 'false'
