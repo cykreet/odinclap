@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 // This interface is the entry point of the dynamic library.
 //

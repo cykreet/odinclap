@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 clap_istream :: struct {
 	ctx: rawptr, // reserved pointer for the stream

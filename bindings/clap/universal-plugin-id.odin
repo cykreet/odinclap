@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 // Pair of plugin ABI and plugin identifier.
 //

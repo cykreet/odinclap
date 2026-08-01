@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 // Sample code for reading a stereo buffer:
 //

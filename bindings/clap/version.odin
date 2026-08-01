@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 clap_version :: struct {
 	// This is the major ABI and API design

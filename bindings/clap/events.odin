@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 // event header
 // All clap events start with an event header to determine the overall

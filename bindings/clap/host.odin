@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 clap_host :: struct {
 	clap_version: clap_version_t, // initialized to CLAP_VERSION

@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 clap_plugin_descriptor :: struct {
 	clap_version: clap_version_t, // initialized to CLAP_VERSION
