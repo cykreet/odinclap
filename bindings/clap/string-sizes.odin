@@ -1,0 +1,5 @@
+package bindings
+
+CLAP_NAME_SIZE :: 256
+CLAP_PATH_SIZE :: 1024
+
