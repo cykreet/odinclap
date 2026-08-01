@@ -3,7 +3,7 @@ name: Validate
 on:
   pull_request:
     paths:
-      - "bindings/**",
+      - "bindings/**"
       - "test/**"
   workflow_dispatch: {}
 
