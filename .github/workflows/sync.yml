@@ -62,7 +62,7 @@ jobs:
           sparse-checkout: |
             include/clap
           sparse-checkout-cone-mode: false
-          path: clap-src
+          path: clap
 
       - name: Setup Odin
         if: steps.compare.outputs.up_to_date == 'false'
@@ -85,7 +85,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update-clap-${{ steps.latest.outputs.tag }}
+          branch: ${{ steps.latest.outputs.tag }}
           commit-message: "Update bindings to CLAP ${{ steps.latest.outputs.tag }}"
           title: "Update CLAP bindings ${{ steps.latest.outputs.tag }}"
           labels: clap-update
