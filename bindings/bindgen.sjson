@@ -1,1 +1,3 @@
+inputs = ["../clap/include/clap"]
+
 output_folder = "clap"
