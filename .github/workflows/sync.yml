@@ -82,6 +82,11 @@ jobs:
         run: |
           mkdir -p bindings/clap
           ./bin/bindgen.bin ./bindings
+
+      - name: Copy constants
+        if: steps.compare.outputs.up_to_date == 'false'
+        run: |
+          cp ./bindings/constants.odin  ./bindings/clap/constants.odin
       
       - name: Update TRACKED_VERSION
         if: steps.compare.outputs.up_to_date == 'false'
