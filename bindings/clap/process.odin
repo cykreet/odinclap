@@ -1,4 +1,4 @@
-package bindings
+package clap
 
 CLAP_PROCESS_ERROR                 :: 0
 CLAP_PROCESS_CONTINUE              :: 1
