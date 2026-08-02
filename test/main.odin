@@ -31,11 +31,11 @@ descriptor := clap.clap_plugin_descriptor {
 }
 
 plugin_init :: proc "c" (p: ^clap.clap_plugin) -> c.bool {
-	context = runtime.default_context()
 	return true	
 }
 
 plugin_destroy :: proc "c" (p: ^clap.clap_plugin) {
+	context = runtime.default_context()
 	state := (^PluginState)(p.plugin_data)
 	free(state)
 }
@@ -90,6 +90,7 @@ factory_create_plugin :: proc "c" (factory: ^clap.clap_plugin_factory, host: ^cl
 		return nil
 	}
 
+	context = runtime.default_context()
 	state := new(PluginState)
 	state.plugin = clap.clap_plugin {
 		desc				= &descriptor,
