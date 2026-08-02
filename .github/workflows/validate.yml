@@ -27,7 +27,7 @@ jobs:
 
       - name: Build test plugin
         run: |
-          mkdir -p Build
+          mkdir -p build
           odin build test -build-mode:shared -out:build/test.so -o:speed
 
           cp build/test.so build/test.clap
