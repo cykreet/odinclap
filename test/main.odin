@@ -1,5 +1,6 @@
 package test
 
+import "base:runtime"
 import "../bindings/clap"
 import "core:c"
 
@@ -13,7 +14,7 @@ PLUGIN_VENDOR	:: "cykreet"
 PLUGIN_VERSION	:: "0.0.1"
 
 descriptor := clap.clap_plugin_descriptor {
-	clap_version	= clap.clap_version,
+	clap_version	= clap.CLAP_VERSION,
 	id				= PLUGIN_ID,
 	name			= PLUGIN_NAME,
 	vendor			= PLUGIN_VENDOR,
@@ -30,6 +31,7 @@ descriptor := clap.clap_plugin_descriptor {
 }
 
 plugin_init :: proc "c" (p: ^clap.clap_plugin) -> c.bool {
+	context = runtime.default_context()
 	return true	
 }
 
@@ -97,7 +99,7 @@ factory_create_plugin :: proc "c" (factory: ^clap.clap_plugin_factory, host: ^cl
 		activate			= plugin_activate,
 		deactivate			= plugin_deactivate,
 		start_processing	= plugin_start_processing,
-		stop_processing		= stop_processing,
+		stop_processing		= plugin_stop_processing,
 		reset				= plugin_reset,
 		process				= plugin_process,
 		get_extension		= plugin_get_extension,
@@ -109,7 +111,7 @@ factory_create_plugin :: proc "c" (factory: ^clap.clap_plugin_factory, host: ^cl
 
 plugin_factory := clap.clap_plugin_factory {
 	get_plugin_count		= factory_get_plugin_count,
-	get_plugin_descriptor	= get_plugin_descriptor,
+	get_plugin_descriptor	= factory_get_plugin_descriptor,
 	create_plugin			= factory_create_plugin,
 }
 
@@ -129,7 +131,7 @@ entry_get_factory :: proc "c" (factory_id: cstring) -> rawptr {
 
 @(export)
 clap_entry := clap.clap_plugin_entry {
-	clap_version	= clap.clap_version,
+	clap_version	= clap.CLAP_VERSION,
 	init			= entry_init,
 	deinit			= entry_deinit,
 	get_factory		= entry_get_factory,
