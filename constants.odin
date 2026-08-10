@@ -5,9 +5,9 @@ package clap
 
 CLAP_VERSION_INIT : clap_version		: { major = CLAP_VERSION_MAJOR, minor = CLAP_VERSION_MINOR, revision = CLAP_VERSION_REVISION }
 CLAP_VERSION : clap_version				: CLAP_VERSION_INIT 
-CLAP_PLUGIN_FACTORY_ID 					:: "clap.plugin_factory"
+CLAP_PLUGIN_FACTORY_ID: cstring			: "clap.plugin-factory"
 
-CLAP_TIMESTAMP_UNKNOW : clap_timestamp 	: 0
+CLAP_TIMESTAMP_UNKNOW : clap_timestamp	: 0
 
 CLAP_INVALID_ID							:: max(u32)
 
