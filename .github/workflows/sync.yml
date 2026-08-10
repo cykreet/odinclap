@@ -75,6 +75,12 @@ jobs:
         run: |
           sudo apt install libclang-dev
 
+      # odin-c-bindgen needs to link against libclang.so, so we just have to create
+      # a symlink to one of the versioned files (from odin-c-bindgen/workflows/build.yml)
+      - name: Symlink libclang.so 
+        run: sudo ln -s libclang-18.so.1 /lib/x86_64-linux-gnu/libclang.so
+        working-directory: /lib/x86_64-linux-gnu/
+
       - name: Build odin-c-bindgen
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
