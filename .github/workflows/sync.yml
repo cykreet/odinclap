@@ -101,7 +101,7 @@ jobs:
       - name: Copy constants
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
-          cp ./bindings/constants.odin ../constants.odin
+          cp ./bindings/constants.odin .
       
       - name: Update TRACKED_VERSION
         if: steps.compare.outputs.up_to_date == 'false'
