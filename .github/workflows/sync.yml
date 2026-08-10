@@ -84,6 +84,8 @@ jobs:
       - name: Build odin-c-bindgen
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
+          mkdir bin
+
           git clone --depth 1 https://github.com/karl-zylinski/odin-c-bindgen.git odin-c-bindgen
           cd odin-c-bindgen
           odin build src -out:bindgen.bin
