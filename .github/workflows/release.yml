@@ -24,6 +24,10 @@ jobs:
           version=$(cat TRACKED_VERSION | tr -d '[:space:]')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Clean bindings 
+        run: |
+          rm -rf ./.github ./test ./bin ./clap ./ols.json
+
       - name: Check tag doesn't already exist
         id: check
         run: |

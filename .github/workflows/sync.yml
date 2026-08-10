@@ -70,18 +70,19 @@ jobs:
         with:
           release: latest
 
-#       - name: Build odin-c-bindgen
-#         if: steps.compare.outputs.up_to_date == 'false'
-#         run: |
-#           git clone --depth 1 https://github.com/karl-zylinski/odin-c-bindgen.git odin-c-bindgen
-#           cd odin-c-bindgen
-#           odin build . -out:../bin -o:speed
+      - name: Build odin-c-bindgen
+        if: steps.compare.outputs.up_to_date == 'false'
+        run: |
+          git clone --depth 1 https://github.com/karl-zylinski/odin-c-bindgen.git odin-c-bindgen
+          cd odin-c-bindgen
+          odin build . -out:../bin -o:speed
 
       - name: Generate bindings
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
           mkdir -p bindings/clap
           ./bin/bindgen.bin ./bindings
+          mv ./bindings/clap/* .
 
       - name: Copy constants
         if: steps.compare.outputs.up_to_date == 'false'
