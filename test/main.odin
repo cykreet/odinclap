@@ -1,7 +1,7 @@
 package test
 
 import "base:runtime"
-import "../bindings/clap"
+import "../clap"
 import "core:c"
 
 PluginState :: struct {
