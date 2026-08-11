@@ -1,8 +1,0 @@
-inputs = [
-	"../clap/include/clap",
-	"../clap/include/clap/ext",
-	"../clap/include/clap/factory",
-]
-
-package_name = "clap"
-output_folder = "clap"
