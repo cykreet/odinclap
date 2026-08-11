@@ -91,7 +91,7 @@ jobs:
           odin build src -out:bindgen.bin
           mv bindgen.bin ../bin/bindgen.bin
 
-      - name: Move binding footers into clap
+      - name: Copy binding footers into clap
         run: |
           cp -rv bindings/footers/. clap/include/clap
 
@@ -103,11 +103,6 @@ jobs:
           ./bin/bindgen.bin ./bindings/clap.bindgen.sjson
           ./bin/bindgen.bin ./bindings/ext.bindgen.sjson
           ./bin/bindgen.bin ./bindings/draft.bindgen.sjson
-      
-      - name: Inject constants
-        if: steps.compare.outputs.up_to_date == 'false'
-        run: |
-          odin run ./scripts/inject_constants.odin -file
 
       - name: Update TRACKED_VERSION
         if: steps.compare.outputs.up_to_date == 'false'
