@@ -67,6 +67,11 @@ jobs:
               body = `## clap-validator report\n\n${results}`;
             }
 
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
             const existing = comments.find(c => c.body.includes("clap-validator report"));
             if (existing != null) {
               await github.rest.issues.updateComment({
