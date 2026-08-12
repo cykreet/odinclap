@@ -59,6 +59,7 @@ jobs:
 
               const results = reportData.results.map(result => {
                 const pluginLibrary = result.test["plugin-library"];
+                if (pluginLibrary == null) return;
                 const status = result.status;
                 return `## ${pluginLibrary.test} — ${status.code === "success" ? "passed" : "failed"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
               }).join("\n");
