@@ -60,7 +60,7 @@ jobs:
               const results = reportData.results.map(result => {
                 const pluginLibrary = result.test["plugin-library"];
                 const status = result.status;
-                return `## ${pluginLibrary.name} — ${status.code === "success" ? "passed" : "failed"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
+                return `## ${pluginLibrary.test} — ${status.code === "success" ? "passed" : "failed"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
               }).join("\n");
 
               body = `## clap-validator report\n\n${results}`;
