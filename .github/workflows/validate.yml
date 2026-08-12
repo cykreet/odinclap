@@ -50,6 +50,7 @@ jobs:
           script: |
             const fs = require("fs");
             const report = fs.readFileSync("validation-report.json", "utf-8");
+            const reportData = JSON.parse(report);
             const status = '${{ steps.validate.outputs.validator_failed }}' === 'true'
             ? "Validation failed"
             : "Validation passed";
