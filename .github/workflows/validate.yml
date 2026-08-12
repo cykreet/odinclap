@@ -25,9 +25,7 @@ jobs:
       - name: Build test plugin
         run: |
           mkdir -p build
-          odin build test -build-mode:shared -out:build/test.so -o:speed
-
-          cp build/test.so build/test.clap
+          odin build test -build-mode:shared -out:build/test.clap -o:speed
 
       - name: Build clap-validator
         run: |
@@ -57,36 +55,55 @@ jobs:
               const report = fs.readFileSync("validation-report.json", "utf-8");
               const reportData = JSON.parse(report);
 
-              const results = reportData.results.map(result => {
-                const pluginLibrary = result.test["plugin-library"];
-                if (pluginLibrary == null) return;
-                const status = result.status;
-                return `## ${pluginLibrary.test} — ${status.code === "success" ? "passed" : "failed"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
-              }).join("\n");
+              const getTestInfo = (result) => {
+                const lib = result.test["plugin-library"];
+                const inst = result.test["plugin-instance"];
+                const entry = lib ?? inst;
+                return {
+                  name: entry.test,
+                  path: entry.path,
+                  pluginId: inst ? inst.plugin_id : null,
+                  code: result.status.code,
+                  details: result.status.details,
+                };
+              };
 
-              body = `## clap-validator report\n\n${results}`;
-            }
+              const tests = reportData.results.map(getTestInfo);
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.includes("clap-validator report"));
-            if (existing != null) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
+              const passedTests = tests.filter(t => t.code === "success");
+              const skippedTests = tests.filter(t => t.code === "skipped");
+              const failedTests = tests.filter(t => t.code !== "success" && t.code !== "skipped");
+
+              const total = tests.length;
+
+              const formatTest = (t) => {
+                const label = t.pluginId ? `${t.name} (${t.pluginId})` : t.name;
+                const detail = t.details ? `\n  - ${t.details}` : "";
+                return `- \`${t.path}\` — ${label}${detail}`;
+              };
+
+              const sections = [];
+
+              if (failedTests.length > 0) {
+                sections.push(`### Failed (${failedTests.length})\n\n${failedTests.map(formatTest).join("\n")}`);
+              }
+
+              if (skippedTests.length > 0) {
+                sections.push(
+                  `<details>\n<summary>Skipped (${skippedTests.length})</summary>\n\n${skippedTests.map(formatTest).join("\n")}\n\n</details>`
+                );
+              }
+
+              if (passedTests.length > 0) {
+                sections.push(
+                  `<details>\n<summary>Passed (${passedTests.length})</summary>\n\n${passedTests.map(formatTest).join("\n")}\n\n</details>`
+                );
+              }
+
+              const status = failedTests.length > 0 ? "Failing" : "Passing";
+              const summary = `${passedTests.length} passed, ${failedTests.length} failed, ${skippedTests.length} skipped (${total} total)`;
+
+              body = `## clap-validator report: ${status}\n\n${summary}\n\n${sections.join("\n\n")}`;
             }
 
       - name: Fail if validation failed
