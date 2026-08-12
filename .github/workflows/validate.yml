@@ -57,7 +57,7 @@ jobs:
             const body = reports.results.map(result => {
               const pluginLibrary = result.test.plugin-library;
               const status = result.status;
-          return `##${pluginLibrary.test} ${status.code === "success" ? "(passed)" : "(failed)"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`
+              return `##${pluginLibrary.test} ${status.code === "success" ? "(passed)" : "(failed)"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
             }).join("\n");
 
             const { data: comments } = await github.rest.issues.listComments({
@@ -93,5 +93,3 @@ jobs:
         with:
           name: clap-validator
           path: validation-report.json
-
-
