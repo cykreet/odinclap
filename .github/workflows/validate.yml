@@ -49,23 +49,22 @@ jobs:
         with:
           script: |
             const fs = require("fs");
-            const report = fs.readFileSync("validation-report.json", "utf-8");
-            const reportData = JSON.parse(report);
-            const status = '${{ steps.validate.outputs.validator_failed }}' === 'true'
-            ? "Validation failed"
-            : "Validation passed";
 
-            const body = report.results.map(result => {
-              const pluginLibrary = result.test.plugin-library;
-              const status = result.status;
-              return `##${pluginLibrary.test} ${status.code === "success" ? "(passed)" : "(failed)"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
-            }).join("\n");
+            let body;
+            if ('${{ steps.validate.outputs.validator_failed }}' === 'true' && !fs.existsSync("validation-report.json")) {
+              body = "## clap-validator report\n\nThe validator crashed before it could produce a report.";
+            } else {
+              const report = fs.readFileSync("validation-report.json", "utf-8");
+              const reportData = JSON.parse(report);
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+              const results = reportData.results.map(result => {
+                const pluginLibrary = result.test["plugin-library"];
+                const status = result.status;
+                return `## ${pluginLibrary.name} — ${status.code === "success" ? "passed" : "failed"}\n\`${pluginLibrary.path}\`${status.details != null ? `\n\n${status.details}` : ""}\n`;
+              }).join("\n");
+
+              body = `## clap-validator report\n\n${results}`;
+            }
 
             const existing = comments.find(c => c.body.includes("clap-validator report"));
             if (existing != null) {
