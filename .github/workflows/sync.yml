@@ -120,11 +120,15 @@ jobs:
       - name: Create empty base branch
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           tag="${{ steps.latest.outputs.tag }}"
 
           if ! git ls-remote --exit-code --heads origin "$tag" >/dev/null 2>&1; then
             git checkout --orphan "$tag"
-            git rm -rf . >/dev/null 2>&1 || true
+            git reset --hard
+            rm -rf ./* ./.[!.]* 2>/dev/null || true
             git commit --allow-empty -m "Initialize $tag"
             git push origin "$tag"
           fi
@@ -135,13 +139,15 @@ jobs:
           tag="${{ steps.latest.outputs.tag }}"
 
           git checkout --orphan "${tag}-candidate"
-          git rm -rf . >/dev/null 2>&1 || true
+          git reset --hard
+          rm -rf ./* ./.[!.]* 2>/dev/null || true
 
           mkdir -p bindings
           cp -r /tmp/clap-output/bindings/clap bindings/clap
           cp /tmp/clap-output/TRACKED_VERSION TRACKED_VERSION
+          cp /tmp/clap-output/README.md README.md
 
-          git add bindings/clap TRACKED_VERSION
+          git add bindings/clap TRACKED_VERSION README.md
           git commit -m "Update bindings to CLAP ${tag}"
           git push --force origin "${tag}-candidate"
 
