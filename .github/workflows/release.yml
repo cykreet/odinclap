@@ -43,7 +43,7 @@ jobs:
 
           git add -A
           git commit -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
-          git tag -a "${{ steps.version.outputs.version }}" \
+          git tag -a v"${{ steps.version.outputs.version }}" \
             -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
 
           git push origin "${{ steps.version.outputs.version }}"
