@@ -1,0 +1,226 @@
+name: Sync CLAP
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get latest CLAP version
+        id: latest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_tag="$(
+            curl -fsSL \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/free-audio/clap/tags?per_page=100" |
+              jq -r '.[].name' |
+              grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' |
+              sort -V |
+              tail -n1
+          )"
+
+          if [[ -z "$latest_tag" ]]; then
+            echo "Could not determine latest CLAP version" >&2
+            exit 1
+          fi
+
+          echo "Latest CLAP version: $latest_tag"
+          echo "tag=$latest_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Check tracked version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tracked="none"
+
+          if [[ -f TRACKED_VERSION ]]; then
+            tracked="$(tr -d '[:space:]' < TRACKED_VERSION)"
+          fi
+
+          latest="${{ steps.latest.outputs.tag }}"
+
+          echo "Tracked: $tracked"
+          echo "Latest:  $latest"
+
+          if [[ "$tracked" == "$latest" ]]; then
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout CLAP headers
+        if: steps.version.outputs.up_to_date == 'false'
+        uses: actions/checkout@v7
+        with:
+          repository: free-audio/clap
+          ref: ${{ steps.latest.outputs.tag }}
+          sparse-checkout: |
+            include/clap
+          sparse-checkout-cone-mode: false
+          path: clap
+
+      - name: Setup Odin
+        if: steps.version.outputs.up_to_date == 'false'
+        uses: laytan/setup-odin@v2
+        with:
+          release: latest
+
+      - name: Install libclang
+        if: steps.version.outputs.up_to_date == 'false'
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+
+      - name: Configure libclang
+        if: steps.version.outputs.up_to_date == 'false'
+        run: |
+          sudo ln -s libclang-18.so.1 /lib/x86_64-linux-gnu/libclang.so
+        working-directory: /lib/x86_64-linux-gnu
+
+      - name: Build odin-c-bindgen
+        if: steps.version.outputs.up_to_date == 'false'
+        run: |
+          set -euo pipefail
+
+          mkdir -p bin
+
+          git clone --depth 1 \
+            https://github.com/karl-zylinski/odin-c-bindgen.git \
+            odin-c-bindgen
+
+          cd odin-c-bindgen
+          odin build src -out:bindgen.bin
+          mv bindgen.bin ../bin/bindgen.bin
+
+      - name: Generate bindings
+        if: steps.version.outputs.up_to_date == 'false'
+        run: |
+          set -euo pipefail
+
+          cp -rv bindings/footers/. clap/include/clap
+
+          mkdir -p bindings/clap
+
+          ./bin/bindgen.bin ./bindings/clap.bindgen.sjson
+          ./bin/bindgen.bin ./bindings/ext.bindgen.sjson
+          ./bin/bindgen.bin ./bindings/draft.bindgen.sjson
+
+      - name: Prepare generated output
+        if: steps.version.outputs.up_to_date == 'false'
+        run: |
+          set -euo pipefail
+
+          rm -rf /tmp/clap-output
+          mkdir -p /tmp/clap-output
+
+          find . -maxdepth 1 -name '*.odin' -exec cp {} /tmp/clap-output/ \;
+          cp -r ext /tmp/clap-output/ext
+          cp README.md /tmp/clap-output/README.md
+
+          echo "${{ steps.latest.outputs.tag }}" > /tmp/clap-output/TRACKED_VERSION
+
+      - name: Create version branch
+        if: steps.version.outputs.up_to_date == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${{ steps.latest.outputs.tag }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin "$tag" >/dev/null 2>&1; then
+            echo "Branch $tag already exists"
+            exit 0
+          fi
+
+          git checkout --orphan "$tag"
+          git rm -rf . 2>/dev/null || true
+
+          git checkout main -- .github test
+
+          cp -r /tmp/clap-output/. .
+
+          git add -A
+          git commit -m "Initialize CLAP $tag"
+          git push origin "$tag"
+
+      - name: Create candidate branch
+        if: steps.version.outputs.up_to_date == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${{ steps.latest.outputs.tag }}"
+          candidate="${tag}-candidate"
+
+          git fetch origin "$tag"
+
+          git checkout -B "$candidate" "origin/$tag"
+
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name 'test' \
+            -exec rm -rf {} +
+
+          cp -r /tmp/clap-output/. .
+
+          git add -A
+          git commit -m "Update bindings to CLAP $tag"
+
+          git push --force origin "$candidate"
+
+      - name: Create pull request
+        if: steps.version.outputs.up_to_date == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${{ steps.latest.outputs.tag }}"
+          candidate="${tag}-candidate"
+
+          if gh pr list \
+            --head "$candidate" \
+            --base "$tag" \
+            --state open \
+            --json number \
+            --jq 'length' |
+            grep -q '^1$'; then
+
+            echo "PR already exists"
+            exit 0
+          fi
+
+          gh pr create \
+            --base "$tag" \
+            --head "$candidate" \
+            --title "Update CLAP bindings $tag" \
+            --label clap-update \
+            --body "$(cat <<EOF
+          Generated by the Sync CLAP workflow.
+
+          Derived from:
+          https://github.com/free-audio/clap/releases/tag/$tag
+
+          EOF
+          )"
