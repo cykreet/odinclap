@@ -156,8 +156,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${{ steps.latest.outputs.tag }}"
+          pr_state="$(
+            gh pr list \
+              --head "${tag}-candidate" \
+              --base "$tag" \
+              --state open \
+              --json state \
+              --jq '.[0].state'
+          )"
 
-          if gh pr view "${tag}-candidate" --json state -q '.state == "OPEN"' >/dev/null 2>&1; then
+          if [ "$pr_state" = "OPEN" ]; then
             echo "PR already exists for ${tag}-candidate, skipping creation"
           else
             gh pr create \
