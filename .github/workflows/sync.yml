@@ -61,9 +61,9 @@ jobs:
           echo "Latest:  $latest"
 
           if [[ "$tracked" == "$latest" ]]; then
-            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
-          else
             echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout CLAP headers
