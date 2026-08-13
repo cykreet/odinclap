@@ -18,20 +18,21 @@ jobs:
       - name: Read version
         id: version
         run: |
-          version=$(cat TRACKED_VERSION | tr -d '[:space:]')
+          version="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Clean bindings 
-        run: |
-          rm -rf ./test ./github
 
       - name: Check tag doesn't already exist
         id: check
         run: |
-          if git rev-parse "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags origin "refs/tags/$version" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+
+      - name: Clean bindings 
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          rm -rf ./test ./github
           fi
     
       - name: Create and push tag
