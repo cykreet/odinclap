@@ -1,0 +1,1 @@
+CLAP_INVALID_ID :: max(u32)

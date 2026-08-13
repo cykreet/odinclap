@@ -1,0 +1,142 @@
+name: Validate
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    if: ${{ github.event.label.name == 'clap-update' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Odin
+        uses: laytan/setup-odin@v2
+        with:
+          release: latest
+
+      - name: Build test plugin
+        run: |
+          mkdir -p build
+          odin build test -build-mode:shared -out:build/test.clap -o:speed
+
+      - name: Build clap-validator
+        run: |
+          mkdir bin
+
+          git clone --depth 1 https://github.com/free-audio/clap-validator.git
+          cd clap-validator
+          cargo build --release
+          cp target/release/clap-validator ../bin/clap-validator
+
+      - name: Run clap-validator
+        run: |
+          ./bin/clap-validator validate ./build/test.clap --json \
+          > validation-report.json || echo "validator_failed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+
+            let body;
+            if ('${{ steps.validate.outputs.validator_failed }}' === 'true' && !fs.existsSync("validation-report.json")) {
+              body = "## clap-validator report\n\nThe validator crashed before it could produce a report.";
+            } else {
+              const report = fs.readFileSync("validation-report.json", "utf-8");
+              const reportData = JSON.parse(report);
+
+              const getTestInfo = (result) => {
+                const lib = result.test["plugin-library"];
+                const inst = result.test["plugin-instance"];
+                const entry = lib ?? inst;
+                return {
+                  name: entry.test,
+              path: entry.path,
+              pluginId: inst ? inst.plugin_id : null,
+              code: result.status.code,
+              details: result.status.details,
+                };
+              };
+
+              const tests = reportData.results.map(getTestInfo);
+
+              const passedTests = tests.filter(t => t.code === "success");
+              const skippedTests = tests.filter(t => t.code === "skipped");
+              const failedTests = tests.filter(t => t.code !== "success" && t.code !== "skipped");
+
+              const total = tests.length;
+
+              const formatTest = (t) => {
+                const label = t.pluginId ? `${t.name} (${t.pluginId})` : t.name;
+              const detail = t.details ? `\n  - ${t.details}` : "";
+              return `- \`${t.path}\` — ${label}${detail}`;
+              };
+
+              const sections = [];
+
+              if (failedTests.length > 0) {
+                sections.push(`### Failed (${failedTests.length})\n\n${failedTests.map(formatTest).join("\n")}`);
+              }
+
+              if (skippedTests.length > 0) {
+                sections.push(
+                `<details>\n<summary>Skipped (${skippedTests.length})</summary>\n\n${skippedTests.map(formatTest).join("\n")}\n\n</details>`
+                );
+              }
+
+              if (passedTests.length > 0) {
+                sections.push(
+                `<details>\n<summary>Passed (${passedTests.length})</summary>\n\n${passedTests.map(formatTest).join("\n")}\n\n</details>`
+                );
+              }
+
+              const status = failedTests.length > 0 ? "Failing" : "Passing";
+              const summary = `${passedTests.length} passed, ${failedTests.length} failed, ${skippedTests.length} skipped (${total} total)`;
+
+              body = `## clap-validator report: ${status}\n\n${summary}\n\n${sections.join("\n\n")}`;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes("clap-validator report"));
+            if (existing != null) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if validation failed
+        if: steps.validate.outputs.validator_failed == 'true'
+        run: exit 1
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clap-validator
+          path: validation-report.json

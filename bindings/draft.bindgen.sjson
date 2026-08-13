@@ -1,0 +1,7 @@
+inputs = [
+	"../clap/include/clap/ext/draft"
+]
+
+package_name = "draft"
+imports_file = "draft_imports.odin"
+output_folder = "../ext/draft"
