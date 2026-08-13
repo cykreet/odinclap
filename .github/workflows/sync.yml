@@ -113,9 +113,26 @@ jobs:
       - name: Stash generated output
         if: steps.compare.outputs.up_to_date == 'false'
         run: |
-          mkdir -p /tmp/clap-output/bindings
-          cp -r bindings/clap /tmp/clap-output/bindings/clap
-          cp TRACKED_VERSION /tmp/clap-output/TRACKED_VERSION
+          mkdir -p /tmp/clap-output
+
+          # root-level generated .odin files
+          find . -maxdepth 1 -name '*.odin' -exec cp {} /tmp/clap-output/ \;
+
+          # generated subdirectories (ext/, draft/, etc.) - anything not part of
+          # the source repo scaffolding or CLAP/bindgen checkouts
+          for dir in */; do
+            dir="${dir%/}"
+            case "$dir" in
+              clap|odin-c-bindgen|bindings|test|bin|.github)
+                continue
+                ;;
+            esac
+            if [ -d "$dir" ]; then
+              cp -r "$dir" /tmp/clap-output/"$dir"
+            fi
+          done
+
+          cp README.md /tmp/clap-output/README.md
 
       - name: Create empty base branch
         if: steps.compare.outputs.up_to_date == 'false'
@@ -129,7 +146,7 @@ jobs:
             git checkout --orphan "$tag"
             git reset --hard
             rm -rf ./* ./.[!.]* 2>/dev/null || true
-            git commit --allow-empty -m "Initialize $tag"
+            git commit --allow-empty -m "init $tag"
             git push origin "$tag"
           fi
 
@@ -140,14 +157,11 @@ jobs:
 
           git checkout --orphan "${tag}-candidate"
           git reset --hard
-          rm -rf ./* ./.[!.]* 2>/dev/null || true
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
-          mkdir -p bindings
-          cp -r /tmp/clap-output/bindings/clap bindings/clap
-          cp /tmp/clap-output/TRACKED_VERSION TRACKED_VERSION
-          cp /tmp/clap-output/README.md README.md
+          cp -r /tmp/clap-output/. .
 
-          git add bindings/clap TRACKED_VERSION README.md
+          git add -A
           git commit -m "Update bindings to CLAP ${tag}"
           git push --force origin "${tag}-candidate"
 
