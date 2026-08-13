@@ -130,7 +130,15 @@ jobs:
           if ! git ls-remote --exit-code --heads origin "$tag" >/dev/null 2>&1; then
             git checkout --orphan "$tag"
             git reset --hard
-            find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+            # keep .github and test directories for pr creation.
+            # if .github isn't present in the base branch, the validation workflow won't run
+            # and if the actual test odin package isn't present, well then there'd be nothing to test.
+            # these should be removed in the release workflow, once merged
+            find . -mindepth 1 -maxdepth 1 \
+              ! -name '.git' \
+              ! -name '.github' \
+              ! -name 'test' \
+              -exec rm -rf {} +
             git commit --allow-empty -m "init $tag"
             git push origin "$tag"
           fi
@@ -142,7 +150,11 @@ jobs:
 
           git fetch origin "$tag"
           git checkout -B "${tag}-candidate" "origin/$tag"
-          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name 'test' \
+            -exec rm -rf {} +
 
           cp -r /tmp/clap-output/. .
 

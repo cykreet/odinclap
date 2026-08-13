@@ -24,9 +24,9 @@ jobs:
           version=$(cat TRACKED_VERSION | tr -d '[:space:]')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-#       - name: Clean bindings 
-#         run: |
-#           rm -rf ./.github ./test ./bin ./clap ./ols.json
+      - name: Clean bindings 
+        run: |
+          rm -rf ./test ./github
 
       - name: Check tag doesn't already exist
         id: check
@@ -42,6 +42,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
           git tag -a "${{ steps.version.outputs.version }}" \
             -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
 
