@@ -28,12 +28,12 @@ jobs:
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Clean bindings 
         if: steps.check.outputs.exists == 'false'
         run: |
           rm -rf ./test ./github
-          fi
     
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
