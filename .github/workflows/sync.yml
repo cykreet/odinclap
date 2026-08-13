@@ -115,23 +115,8 @@ jobs:
         run: |
           mkdir -p /tmp/clap-output
 
-          # root-level generated .odin files
           find . -maxdepth 1 -name '*.odin' -exec cp {} /tmp/clap-output/ \;
-
-          # generated subdirectories (ext/, draft/, etc.) - anything not part of
-          # the source repo scaffolding or CLAP/bindgen checkouts
-          for dir in */; do
-            dir="${dir%/}"
-            case "$dir" in
-              clap|odin-c-bindgen|bindings|test|bin|.github)
-                continue
-                ;;
-            esac
-            if [ -d "$dir" ]; then
-              cp -r "$dir" /tmp/clap-output/"$dir"
-            fi
-          done
-
+          cp -r ext /tmp/clap-output/ext
           cp README.md /tmp/clap-output/README.md
 
       - name: Create empty base branch
@@ -145,7 +130,7 @@ jobs:
           if ! git ls-remote --exit-code --heads origin "$tag" >/dev/null 2>&1; then
             git checkout --orphan "$tag"
             git reset --hard
-            rm -rf ./* ./.[!.]* 2>/dev/null || true
+            find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
             git commit --allow-empty -m "init $tag"
             git push origin "$tag"
           fi
