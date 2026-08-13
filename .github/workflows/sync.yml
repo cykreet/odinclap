@@ -140,8 +140,8 @@ jobs:
         run: |
           tag="${{ steps.latest.outputs.tag }}"
 
-          git checkout --orphan "${tag}-candidate"
-          git reset --hard
+          git fetch origin "$tag"
+          git checkout -B "${tag}-candidate" "origin/$tag"
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
           cp -r /tmp/clap-output/. .
