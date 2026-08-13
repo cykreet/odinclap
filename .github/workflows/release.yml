@@ -1,10 +1,7 @@
 name: Tag release
 
 on:
-  push:
-    # branches: [main]
-    paths:
-      - TRACKED_VERSION
+  workflow_dispatch:
 
 permissions:
   contents: write
