@@ -33,7 +33,7 @@ jobs:
       - name: Clean bindings 
         if: steps.check.outputs.exists == 'false'
         run: |
-          rm -rf ./test ./github
+          rm -rf ./test ./.github
     
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
@@ -52,7 +52,7 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           body: |
             Odin bindings generated against CLAP ${{ steps.version.outputs.version }}.
