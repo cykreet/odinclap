@@ -157,7 +157,7 @@ jobs:
         run: |
           tag="${{ steps.latest.outputs.tag }}"
 
-          if gh pr view "${tag}-candidate" --json state -q .state >/dev/null 2>&1; then
+          if gh pr view "${tag}-candidate" --json state -q '.state == "OPEN"' >/dev/null 2>&1; then
             echo "PR already exists for ${tag}-candidate, skipping creation"
           else
             gh pr create \

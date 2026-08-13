@@ -24,8 +24,8 @@ jobs:
         with:
           release: latest
 
-          # write test/main.odin to the directory, since all non-binding files are removed
-          # when the candidate pull request is created. not ideal, but im tired
+        # write test/main.odin to the directory, since all non-binding files are removed
+        # when the candidate pull request is created. not ideal, but im tired
       - name: Write plugin test
         run: |
           mkdir test
@@ -169,6 +169,7 @@ jobs:
             deinit                  = entry_deinit,
             get_factory             = entry_get_factory,
           }
+          EOL
 
       - name: Build test plugin
         run: |
