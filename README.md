@@ -1,4 +1,5 @@
 # odinclap
+![GitHub Tag](https://img.shields.io/github/v/tag/cykreet/odinclap)
 
 This repo is setup to pull the most recent version of [`clap`](https://github.com/free-audio/clap) every week. If it's a published version newer than our latest tag, we pull the version content, generate odin bindings with [`odin-c-bindgen`](https://github.com/karl-zylinski/odin-c-bindgen) and open a pull request.
 
