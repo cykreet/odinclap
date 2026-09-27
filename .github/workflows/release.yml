@@ -41,6 +41,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          version="${{ steps.version.outputs.version }}"
+          branch="$GITHUB_REF_NAME"
+
           git add -A
           git commit -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
           git tag -a v"${{ steps.version.outputs.version }}" \
