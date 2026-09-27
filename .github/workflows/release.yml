@@ -50,7 +50,7 @@ jobs:
             "HEAD:refs/heads/$branch" \
             "refs/tags/v$version"
 
-		echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
         if: steps.check.outputs.exists == 'false'
