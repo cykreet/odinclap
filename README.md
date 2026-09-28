@@ -8,10 +8,10 @@ This repo is setup to pull the most recent version of [`clap`](https://github.co
 Once you have the bindings local to your machine, you can start using it by either pointing to the relative path of the bindings directory or setup a collection and use the collection name instead. If you're using ols, [the collection would also have to be configured](https://github.com/DanielGavin/ols#configuration).
 
 ```odin
-# using a directory
+// using a directory
 import clap "deps/clap"
 
-# using a collection
+// using a collection
 import clap "deps:clap"
 ```
 
