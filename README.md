@@ -13,6 +13,34 @@ import clap "deps/clap"
 
 // using a collection
 import clap "deps:clap"
+import "base:runtime"
+import "core:c"
+
+PluginState :: struct {
+	plugin: clap.clap_plugin,
+}
+
+PLUGIN_ID		:: "com.cykreet.test"
+PLUGIN_NAME		:: "Bindgen Test"
+PLUGIN_VENDOR	:: "cykreet"
+PLUGIN_VERSION	:: "0.0.1"
+
+descriptor := clap.clap_plugin_descriptor {
+	clap_version	= clap.CLAP_VERSION,
+	id				= PLUGIN_ID,
+	name			= PLUGIN_NAME,
+	vendor			= PLUGIN_VENDOR,
+	url				= "",
+	manual_url		= "",
+	support_url		= "",
+	version			= PLUGIN_VERSION,
+	description		= "plugin used to validate generated bindings",
+	features		= raw_data([]cstring { 
+		clap.CLAP_PLUGIN_FEATURE_AUDIO_EFFECT,
+		clap.CLAP_PLUGIN_FEATURE_STEREO,
+		nil 
+	}),
+}
 ```
 
 ### git (submodules)
