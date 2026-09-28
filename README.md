@@ -5,6 +5,16 @@ This repo is setup to pull the most recent version of [`clap`](https://github.co
 
 ## usage
 
+Once you have the bindings local to your machine, you can start using it by either pointing to the relative path of the bindings directory or setup a collection and use the collection name instead. If you're using ols, [the collection would also have to be configured](https://github.com/DanielGavin/ols#configuration).
+
+```odin
+# using a directory
+import clap "deps/clap"
+
+# using a collection
+import clap "deps:clap"
+```
+
 ### git (submodules)
 
 Replace `deps/clap` with the directory you'd like to place the submodule in, and replace `1.2.10` with the relevant version (there is no `latest` branch, and `1.2.10` is the earliest branch available).

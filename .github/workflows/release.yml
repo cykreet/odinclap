@@ -41,18 +41,26 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          version="${{ steps.version.outputs.version }}"
+          branch="$GITHUB_REF_NAME"
+
           git add -A
           git commit -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
           git tag -a v"${{ steps.version.outputs.version }}" \
             -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
 
-          git push origin "${{ steps.version.outputs.version }}"
+          git push --atomic origin \
+            "HEAD:refs/heads/$branch" \
+            "refs/tags/v$version"
+
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
         if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ steps.version.outputs.sha }}
           name: ${{ steps.version.outputs.version }}
           body: |
             Odin bindings generated against CLAP ${{ steps.version.outputs.version }}.
