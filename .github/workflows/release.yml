@@ -46,12 +46,12 @@ jobs:
 
           git add -A
           git commit -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
-          git tag -a v"${{ steps.version.outputs.version }}" \
+          git tag -a "${{ steps.version.outputs.version }}" \
             -m "Bindings for CLAP ${{ steps.version.outputs.version }}"
 
           git push --atomic origin \
             "HEAD:refs/heads/$branch" \
-            "refs/tags/v$version"
+            "refs/tags/$version"
 
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -59,7 +59,7 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.version }}
           target_commitish: ${{ steps.version.outputs.sha }}
           name: ${{ steps.version.outputs.version }}
           body: |
